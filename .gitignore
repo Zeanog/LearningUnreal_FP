@@ -2,7 +2,11 @@
 bin
 Release
 Debug
-Intermediate
+Intermediate/AssetRegistryCache/*
+Intermediate/Build/*
+Intermediate/DatasmithContentTemp/*
+Intermediate/ReimportCache/*
+Intermediate/*.bin
 Binaries
 Saved
 obj
