@@ -3,7 +3,7 @@
   <ItemGroup>
     <None Include="..\..\LearningUnreal_FP.uproject" />
     <Filter Include="Source">
-      <UniqueIdentifier>{D7922CB3-2C05-44D2-AA46-0AE53753D5AD}</UniqueIdentifier>
+      <UniqueIdentifier>{E73AD2B2-510E-4512-B2C4-F6916BD34D3B}</UniqueIdentifier>
     </Filter>
     <None Include="..\..\Source\LearningUnreal_FP.Target.cs">
       <Filter>Source</Filter>
@@ -12,7 +12,7 @@
       <Filter>Source</Filter>
     </None>
     <Filter Include="Config">
-      <UniqueIdentifier>{EFD3FD72-4644-40FA-8E54-77BF55601159}</UniqueIdentifier>
+      <UniqueIdentifier>{FD6A2F50-7AF8-4685-959B-F32997471266}</UniqueIdentifier>
     </Filter>
     <None Include="..\..\Config\DefaultEditor.ini">
       <Filter>Config</Filter>
@@ -30,7 +30,7 @@
       <Filter>Config</Filter>
     </None>
     <Filter Include="Source\LearningUnreal_FP">
-      <UniqueIdentifier>{76B57DC2-6662-45B7-B75F-65B3DF47B50E}</UniqueIdentifier>
+      <UniqueIdentifier>{47A477F6-ACAD-4530-BD5B-7F7B061427FE}</UniqueIdentifier>
     </Filter>
     <None Include="..\..\Source\LearningUnreal_FP\LearningUnreal_FP.Build.cs">
       <Filter>Source\LearningUnreal_FP</Filter>
@@ -63,6 +63,12 @@
       <Filter>Source\LearningUnreal_FP</Filter>
     </ClCompile>
     <ClInclude Include="..\..\Source\LearningUnreal_FP\LearningUnreal_FPProjectile.h">
+      <Filter>Source\LearningUnreal_FP</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\LearningUnreal_FP\TargetSignal.cpp">
+      <Filter>Source\LearningUnreal_FP</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\LearningUnreal_FP\TargetSignal.h">
       <Filter>Source\LearningUnreal_FP</Filter>
     </ClInclude>
   </ItemGroup>

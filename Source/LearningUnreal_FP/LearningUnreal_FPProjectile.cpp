@@ -12,6 +12,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "DrawDebugHelpers.h"
+#include "TargetSignal.h"
 
 class IProjectileState {
 public:
@@ -68,6 +69,8 @@ public:
 class ProjectileState_Fly : public IProjectileState {
 protected:
 	FVector		m_StaticTargetLocation;
+	float		m_NoiseInput;
+	FVector		m_NoiseOffsets_WorldSpace;
 
 public:	
 	ProjectileState_Fly(IProjectileState* nextState) : IProjectileState(nextState) {
@@ -105,6 +108,11 @@ public:
 			if (OutHit.bBlockingHit)
 			{ 
 				self->ProjectileMovement->HomingTargetComponent = OutHit.Component;
+				auto owner = self->ProjectileMovement->HomingTargetComponent->GetOwner();
+				auto signal = (UTargetSignal*)owner->GetComponentByClass(UTargetSignal::StaticClass());
+				if (signal != NULL) {
+					signal->Signal();
+				}
 			}
 			else {
 				m_StaticTargetLocation = OutHit.ImpactPoint;
@@ -112,7 +120,7 @@ public:
 		}
 		self->ProjectileMovement->bIsHomingProjectile = self->ProjectileMovement->HomingTargetComponent.IsValid();
 
-		time = self->GetGameTimeSinceCreation();
+		m_NoiseInput = self->GetGameTimeSinceCreation();
 
 		UGameplayStatics::SpawnEmitterAttached(self->GetTrailFx(), Cast<USceneComponent>(self->GetComponentByClass(UMeshComponent::StaticClass())));
 
@@ -138,47 +146,44 @@ public:
 			FVector vecToTarget = GetTargetLocation(self) - self->GetActorLocation();
 			float distToTarget = FMath::Clamp( vecToTarget.Size(), minDist, maxDist );
 			return (distToTarget - minDist) / (maxDist - minDist);
-		}/*
-		else {
-			float minDist = 0.0f;
-			float maxDist = 10.0f;
-			float distFromStart = FMath::Clamp((self->GetActorLocation() - self->StartPosition).Size(), minDist, maxDist);
-			return 1.0f - (distFromStart - minDist) / (maxDist - minDist);
-		}*/
+		}
 		return 1.0f;
 	}
 
-	float time;
-	FVector	m_NoiseOffsets_WorldSpace;
 	virtual void		Tick(ALearningUnreal_FPProjectile* self, float deltaTime) override {
-		time += deltaTime * self->NoiseFrequency;
-		float noiseInput = time;
+		m_NoiseInput += deltaTime * self->NoiseFrequency;
+		float noiseInput = m_NoiseInput;
 		float yFrac = FMath::PerlinNoise1D(noiseInput);
 		float zFrac = FMath::PerlinNoise1D(noiseInput + 349.0f);
 		
 		float scale = DetermineNoiseScale(self);
 
-		FVector	offsets;
-		offsets.X = 0.0f;
-		offsets.Y = self->NoiseGain.X * scale * yFrac;
-		offsets.Z = self->NoiseGain.Y * scale * zFrac;
+		if (scale > 0.0f && self->NoiseGain.Size() > 0.0f) {
+			FVector	offsets;
+			offsets.X = 0.0f;
+			offsets.Y = self->NoiseGain.X * scale * yFrac;
+			offsets.Z = self->NoiseGain.Y * scale * zFrac;
 
-		FVector actorLoc = self->GetActorLocation();
+			FVector actorLoc = self->GetActorLocation();
 
-		FTransform	transform(self->GetActorRotation());
-		FVector denoisedLocation = actorLoc - m_NoiseOffsets_WorldSpace;
+			FTransform	transform(self->GetActorRotation());
+			FVector denoisedLocation = actorLoc - m_NoiseOffsets_WorldSpace;
 
-		if(self->ProjectileMovement->HomingTargetComponent == NULL) {
-			FRotator deltaRot = (self->TargetDirection.ToOrientationRotator() - self->GetActorRotation());
-			self->SetActorRotation(self->GetActorRotation() + deltaRot * deltaTime * 15.0f);
-			self->ProjectileMovement->SetVelocityInLocalSpace(FVector::ForwardVector * self->ProjectileMovement->Velocity.Size());
-			
-			FVector ptOnLine = ProjectPointOnLine(denoisedLocation, self->TargetDirection, self->StartPosition);
-			denoisedLocation = ptOnLine + (denoisedLocation - ptOnLine) * scale;
+			if (self->ProjectileMovement->HomingTargetComponent == NULL) {
+				FRotator deltaRot = (self->TargetDirection.ToOrientationRotator() - self->GetActorRotation());
+				self->SetActorRotation(self->GetActorRotation() + deltaRot * deltaTime * 15.0f);
+				self->ProjectileMovement->SetVelocityInLocalSpace(FVector::ForwardVector * self->ProjectileMovement->Velocity.Size());
+
+				FVector ptOnLine = ProjectPointOnLine(denoisedLocation, self->TargetDirection, self->StartPosition);
+				denoisedLocation = ptOnLine + (denoisedLocation - ptOnLine) * scale;
+			}
+
+			m_NoiseOffsets_WorldSpace = transform.TransformVector(offsets);
+			self->SetActorLocation(denoisedLocation + m_NoiseOffsets_WorldSpace);
 		}
-
-		m_NoiseOffsets_WorldSpace = transform.TransformVector(offsets);
-		self->SetActorLocation(denoisedLocation + m_NoiseOffsets_WorldSpace);
+		else {
+			int dsf = 454;
+		}
 	}
 };
 
